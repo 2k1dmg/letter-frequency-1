@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>letter frequency</title>
+<style>
+#container {
+	display: flex;
+	justify-content: space-between;
+}
+#intext, #outtext {
+	outline: 0;
+	border: 1px solid #d9d9d9;
+	min-height: 100px;
+	width: calc(50% - 30px);
+	padding: 10px;
+	margin-top: 10px;
+	/*word-wrap: break-word;*/
+}
+#intext {
+	border-top: 1px solid #c0c0c0;
+	max-width: calc(50% - 30px);
+	min-width: calc(50% - 30px);
+	/*overflow-y: scroll;*/
+	max-height: 500px;
+	height: 300px;
+}
+#outtext {
+	background-color: whitesmoke;
+	border-color: whitesmoke;
+	white-space: pre-wrap;
+}
+#intext:hover {
+	box-shadow: 0 1px 3px rgba(0,0,0,.3) inset;
+}
+#intext:focus {
+	border-color: #4d90fe;
+}
+@media screen and (max-width: 768px) {
+	#container {
+		display: block;
+	}
+	#intext, #outtext {
+		width: calc(100% - 20px);
+	}
+	#intext {
+		max-width: calc(100% - 20px);
+		min-width: calc(100% - 20px);
+		max-height: 300px;
+		height: 150px;
+	}
+}
+#gitlink {
+	font-weight: bold;
+	font-family: monospace;
+	text-decoration: none;
+	color: #555;
+	position: absolute;
+	top: 5pt;
+	right: 5pt;
+}
+#gitlink:hover {
+	color: #222;
+}
+#gitlink:active {
+	color: #4169e1; 
+}
+</style>
+<script>
+// letter frequency 2016-07-14 v2
+// Firefox - Custom Buttons - Initialization Code
+// data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAgElEQVR42mP8//8/AymAEU3D9nRGr1lp2/7P9Lwz0Vq1gGHC7aP5KlTVQLKTSNQAdsYxOBfsNNwa0FSDgRU+PwA1dKsdhRsJ9j6mJbj9ALGQkAaIsUgAnwawYoSjCdmAiDEinYTmR1iQYQQTXAO2QMXmEWRPI+mBGAwLAlwaiAIA1lyV4QUWOoUAAAAASUVORK5CYII=
+
+// https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
+//let n_sp = 0;
+function getWholeCharAndI(str, i) {
+  var code = str.charCodeAt(i);
+
+  if (isNaN(code)) {
+    return ''; // Позиция не найдена
+  }
+  if (code < 0xD800 || code > 0xDFFF) {
+    return [str.charAt(i), i]; // Обычный символ, оставляем переменную 'i' неизменной
+  }
+
+  // Старшая часть суррогатной пары (последнее число можно изменить на 0xDB7F,
+  // чтобы трактовать старшую часть суррогатной пары в частной плоскости как
+  // одиночный символ)
+  if (0xD800 <= code && code <= 0xDBFF) {
+    if (str.length <= (i + 1)) {
+      throw 'Старшая часть суррогатной пары без следующей младшей';
+    }
+    var next = str.charCodeAt(i + 1);
+      if (0xDC00 > next || next > 0xDFFF) {
+        throw 'Старшая часть суррогатной пары без следующей младшей';
+      }
+	  //n_sp++;
+      return [str.charAt(i) + str.charAt(i + 1), i + 1];
+  }
+  // Младшая часть суррогатной пары (0xDC00 <= code && code <= 0xDFFF)
+  if (i === 0) {
+    throw 'Младшая часть суррогатной пары без предшествующей старшей';
+  }
+  var prev = str.charCodeAt(i - 1);
+
+  // (последнее число можно изменить на 0xDB7F, чтобы трактовать старшую
+  // часть суррогатной пары в частной плоскости как одиночный символ)
+  if (0xD800 > prev || prev > 0xDBFF) {
+    throw 'Младшая часть суррогатной пары без предшествующей старшей';
+  }
+  // Возвращаем следующий символ (и увеличиваем счётчик)
+  return [str.charAt(i + 1), i + 1];
+}
+
+// https://stackoverflow.com/questions/18619785/counting-frequency-of-characters-in-a-string-using-javascript
+function getFrequency(string) {
+	//n_sp = 0;
+	let freq = {};
+	for(let i = 0, character; i < string.length; i++) {
+		[character, i] = getWholeCharAndI(string, i);
+		if(freq[character]) {
+			freq[character]++;
+		}
+		else {
+			freq[character] = 1;
+		}
+	}
+	return freq;
+}
+
+// http://www.theasciicode.com.ar/ascii-control-characters/carriage-return-ascii-code-13.html
+function checkChar(str) {
+	switch(str.charCodeAt(0)) {
+		case 9:
+			return '[HT]';
+		case 10:
+			return '[LF]';
+		case 13:
+			return '[CR]';
+		case 32:
+			return '[Space]';
+	}
+	return str;
+}
+
+// https://habrahabr.ru/post/240349/
+function getHEXcode(i) {
+	let string = i.codePointAt(0).toString(16);
+	while(string.length < 4)
+		string = '0' + string;
+	return string;
+}
+
+function getPercent(totalValue, value) {
+	return ((value / totalValue) * 100).toFixed(3);
+}
+
+let alphabet = {
+	'pun': {
+		//https://en.wikipedia.org/wiki/Punctuation
+		// ’'[](){}⟨⟩:,،、‒–—―…!.‹›«»‐-?‘’“”''"";/⁄·&*@•^†‡°″¡¿#№÷×ºª%‰+−=‱¶′″‴§~_|‖¦©℗®℠™¤₳฿₵¢₡₢$₫₯₠€ƒ₣₲₴₭₺ℳ₥₦₧₱₰£៛₽₹₨₪৳₸₮₩¥⁂❧☞‽⸮◊※⁀ <>
+		main: '\u2019\u0027\u005b\u005d\u0028\u0029\u007b\u007d\u27e8\u27e9\u003a\u002c\u060c\u3001\u2012\u2013\u2014\u2015\u2026\u0021\u002e\u2039\u203a\u00ab\u00bb\u2010\u002d\u003f\u2018\u2019\u201c\u201d\u0027\u0027\u0022\u0022\u003b\u002f\u2044\u00b7\u0026\u002a\u0040\u2022\u005e\u2020\u2021\u00b0\u2033\u00a1\u00bf\u0023\u2116\u00f7\u00d7\u00ba\u00aa\u0025\u2030\u002b\u2212\u003d\u2031\u00b6\u2032\u2033\u2034\u00a7\u007e\u005f\u007c\u2016\u00a6\u00a9\u2117\u00ae\u2120\u2122\u00a4\u20b3\u0e3f\u20b5\u00a2\u20a1\u20a2\u0024\u20ab\u20af\u20a0\u20ac\u0192\u20a3\u20b2\u20b4\u20ad\u20ba\u2133\u20a5\u20a6\u20a7\u20b1\u20b0\u00a3\u17db\u20bd\u20b9\u20a8\u20aa\u09f3\u20b8\u20ae\u20a9\u00a5\u2042\u2767\u261e\u203d\u2e2e\u25ca\u203b\u2040' + '\u003c\u003e',
+		re: '\\u2019\\u0027\\u005b\\u005d\\u0028\\u0029\\u007b\\u007d\\u27e8\\u27e9\\u003a\\u002c\\u060c\\u3001\\u2012\\u2013\\u2014\\u2015\\u2026\\u0021\\u002e\\u2039\\u203a\\u00ab\\u00bb\\u2010\\u002d\\u003f\\u2018\\u2019\\u201c\\u201d\\u0027\\u0027\\u0022\\u0022\\u003b\\u002f\\u2044\\u00b7\\u0026\\u002a\\u0040\\u2022\\u005e\\u2020\\u2021\\u00b0\\u2033\\u00a1\\u00bf\\u0023\\u2116\\u00f7\\u00d7\\u00ba\\u00aa\\u0025\\u2030\\u002b\\u2212\\u003d\\u2031\\u00b6\\u2032\\u2033\\u2034\\u00a7\\u007e\\u005f\\u007c\\u2016\\u00a6\\u00a9\\u2117\\u00ae\\u2120\\u2122\\u00a4\\u20b3\\u0e3f\\u20b5\\u00a2\\u20a1\\u20a2\\u0024\\u20ab\\u20af\\u20a0\\u20ac\\u0192\\u20a3\\u20b2\\u20b4\\u20ad\\u20ba\\u2133\\u20a5\\u20a6\\u20a7\\u20b1\\u20b0\\u00a3\\u17db\\u20bd\\u20b9\\u20a8\\u20aa\\u09f3\\u20b8\\u20ae\\u20a9\\u00a5\\u2042\\u2767\\u261e\\u203d\\u2e2e\\u25ca\\u203b\\u2040' + '\\u003c\\u003e',
+		exten: ''
+	},
+	'num': {
+		main: '0123456789',
+		exten: ''
+	},
+	'lat_eng': {
+		main: 'abcdefghijklmnopqrstuvwxyz',
+		exten: ''
+	},
+	'lat_ext': {
+		main: 'abcdefghijklmnopqrstuvwxyzßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿāăąćĉċčďđēĕėęěĝğġģĥħĩīĭįĳĵķĸĺļľŀłńņňŉŋōŏőœŕŗřśŝşšţťŧũūŭůűųŵŷźżž',
+		exten: ''
+	},
+	'lat_tur': {
+		main: 'aäbcçdefgğhıijklmnñoöpqrsştuüvwxyzəíţśźčžâîûôġ',
+		exten: 'İiIı',
+		fn: function(value, character) {
+			switch(character) {
+				case 'i':
+				case 'İ':
+					return [value, 'i'];
+				case 'ı':
+				case 'I':
+					return [value, 'ı'];
+			}
+		}
+	},
+	'cyr_rus': {
+		main: 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя',
+		exten: ''
+	},
+	'cyr_tat': {
+		main: 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяәөүҗңһҙҡҫғ',
+		exten: ''
+	}
+};
+
+function getFiltered(freqAll, filterAttr) {
+	let freqRes = {};
+	function setChar(value, character) {
+		if(freqRes[character]) {
+			freqRes[character] += value;
+		}
+		else {
+			freqRes[character] = value;
+		}
+	}
+	for(let i in freqAll) {
+		if(alphabet[filterAttr].exten.indexOf(i) != -1) {
+			setChar.apply(this, alphabet[filterAttr].fn(freqAll[i], i))
+			continue;
+		}
+		let character = i.toLowerCase();
+		if(alphabet[filterAttr].main.indexOf(character) != -1) {
+			setChar(freqAll[i], character);
+		}
+	}
+	return freqRes;
+}
+
+function processData(sourceText, filterAttr) {
+	let timeStart = Date.now();
+
+	let freqAll = getFrequency(sourceText);
+	let freqRes = freqAll;
+	if(filterList.indexOf(filterAttr) != -1) {
+		freqRes = getFiltered(freqAll, filterAttr);
+	}
+	let freqList = [];
+	let freqSum = 0;
+	for(let i in freqRes) {
+		freqSum += freqRes[i];
+		freqList.push({name: i, value: freqRes[i]});
+	}
+	freqList.sort(function(a, b) {
+		return b.value - a.value;
+	});
+	let outputList = [filterAttr, 'char\tcount\t%\tcode\thex'];
+	let outputListLen = outputList.length;
+	let missingLetters = alphabet[filterAttr] ? alphabet[filterAttr].main : '';
+	freqList.forEach(function(item) {
+		outputList.push(checkChar(item.name) +'\t'+ item.value +'\t'+ getPercent(freqSum, item.value) +'\t'+ item.name.codePointAt(0) +'\t'+ getHEXcode(item.name));
+		missingLetters = missingLetters.replace(item.name, '');
+	});
+	outputList.push('('+ (outputList.length-outputListLen) +')\t('+ freqSum +')');
+	if(missingLetters)
+			outputList.push(missingLetters.split('').join(' '));
+	// https://stackoverflow.com/questions/5515869/string-length-in-bytes-in-javascript
+	function byteLength(str) {
+	  // returns the byte length of an utf8 string
+	  var s = str.length;
+	  for (var i=str.length-1; i>=0; i--) {
+		var code = str.charCodeAt(i);
+		if (code > 0x7f && code <= 0x7ff) s++;
+		else if (code > 0x7ff && code <= 0xffff) s+=2;
+		if (code >= 0xDC00 && code <= 0xDFFF) i--; //trail surrogate
+	  }
+	  return s;
+	}
+	let stats = {
+		dl: sourceText.length,
+		chs: Array.from(sourceText).length, //sourceText.normalize().length
+		chsns: Array.from(sourceText.replace(/\s+/g, '')).length, //sourceText.replace(/\s+/g, '').normalize().length
+		chsl: Array.from(sourceText.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '')).length,
+		ws: sourceText.split(/\s+/).length,
+		wsl: sourceText.replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '').split(/\s+/).length,
+		bl: byteLength(sourceText),
+		ll: (sourceText.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '')).length,
+		bll: byteLength(sourceText.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), ''))
+	};
+	let byteLengthCharacter = (function() {
+		let total = {};
+		for(let i in freqAll) {
+			let len = byteLength(i);
+			if(total[len]) {
+				total[len] += freqAll[i];
+			}
+			else {
+				total[len] = freqAll[i];
+			}
+		}
+		return total;
+	})();
+	let byteLengthLetter = (function() {
+		let total = {};
+		for(let i in freqAll) {
+			if(i.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '') == '')
+				continue;
+			let len = byteLength(i);
+			if(total[len]) {
+				total[len] += freqAll[i];
+			}
+			else {
+				total[len] = freqAll[i];
+			}
+		}
+		return total;
+	})();
+	outputList.push('-',
+		(100 - ((freqSum * 100)/stats.chs)).toFixed(3) + '%\t- filtered',
+		//n_sp + '\t- surrogate pairs (4 byte character)',
+		//stats.dl - stats.chs + '\t- surrogate pairs',
+		'-',
+		stats.chs + '\t- characters',
+		stats.chsns + '\t- characters (without space)',
+		stats.ws + '\t- words (with punctuation, numbers)',
+		(stats.chsns / stats.ws).toFixed(3) + '\t- characters per word',
+		'-',
+		stats.chsl + '\t- letters (characters without space, punctuation, numbers)',
+		stats.wsl + '\t- words',
+		(stats.chsl / stats.wsl).toFixed(3) + '\t- letters per word',
+		'-',
+		((stats.chs * 100)/stats.bl).toFixed(3) + '%\t- utf-8 efficiency characters',
+		stats.dl + '\t- characters length (JS)',
+		stats.bl + '\t- characters bytes',
+		'-',
+		((stats.chsl * 100)/stats.bll).toFixed(3) + '%\t- utf-8 efficiency letters',
+		stats.ll + '\t- letters length (JS)',
+		stats.bll + '\t- letters bytes',
+		'-');
+	for(let i in byteLengthCharacter) {
+		outputList.push(byteLengthCharacter[i] + '\t- '+ i +' byte characters');
+	}
+	outputList.push('-');
+	for(let i in byteLengthLetter) {
+		outputList.push(byteLengthLetter[i] + '\t- '+ i +' byte letters');
+	}
+	let timeEnd = Date.now();
+	outputList.push('-');
+	outputList.push('time: '+ ((timeEnd - timeStart)/1000) + ' seconds');
+	let output = outputList.join('\n');
+	return output;
+}
+
+// -----------------------------------------------------------------------------
+
+let menumenuList = [
+	['All', 'all'],
+	['Numbers', 'num'],
+	['Punctuation', 'pun'],
+	['separator'],
+	['Latin(English)', 'lat_eng'],
+	['Latin Extended', 'lat_ext'],
+	['Latin(Turkic)', 'lat_tur'],
+	['Cyrillic(Russian)', 'cyr_rus'],
+	['Cyrillic(Tatar)', 'cyr_tat']
+];
+let filterList = [];
+
+function initPage() {
+	menumenuList.forEach(function(item) {
+		if(item[0] == 'separator') {
+			menuList.appendChild(new Option('──────────', item[0]));
+		}
+		else {
+			menuList.appendChild(new Option(item[0], item[1]));
+			if(item[1] != 'all' )
+				filterList.push(item[1]);
+		}
+	});
+	var options = menuList.getElementsByTagName('option');
+	for(var o in options) {
+		if(options[o].value == 'separator')
+			options[o].disabled = true;
+		if(alphabet[options[o].value])
+			options[o].setAttribute('title', alphabet[options[o].value].main.split('').join(' '));
+	}
+	intext.focus();
+	intext.addEventListener('keyup', function(event) {
+		if(event.keyCode==13 && event.ctrlKey)
+			letterFrequency();
+	}, false);
+	//autolf.checked = false;
+	menuList.onchange = function(event) {
+		if(autolf.checked)
+			letterFrequency();
+	};
+	//intext.style.cssText = 'height: '+ parseInt(window.screen.height * 0.6) +'px;';
+}
+
+function letterFrequency() {
+	var selected = menuList.options[menuList.options.selectedIndex].value;
+	outtext.textContent = processData(intext.value, selected);
+}
+function clearAll() {
+	intext.value = '';
+	outtext.textContent = '';
+}
+</script>
+</head>
+<body onload="initPage()">
+<input type="button" name="clearAll" value="Очистить" onclick="clearAll();">
+<input type="button" name="letterFrequency" value="Подсчитать" onclick="letterFrequency();">
+<input type="checkbox" checked id="autolf" title="Посдчёт при изменении опции">
+<select id="menuList"></select>
+<div id="container">
+	<textarea id="intext" spellcheck="false"></textarea>
+	<pre id="outtext"></pre>
+	<a href="https://github.com/2k1dmg/letter-frequency" id="gitlink" target="_blank" title="2k1dmg/letter-frequency">GitHub</a>
+</div>
+</body></html>
