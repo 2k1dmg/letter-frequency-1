@@ -2,7 +2,7 @@
 <html><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>letter frequency / частотность букв</title>
+<title>Частотность букв</title>
 <style>
 #container {
 	display: flex;
@@ -384,6 +384,7 @@ function initPage() {
 	if(!/ru|ua|by/i.test(navigator.language)) {
 		document.querySelector('input[name=letterFrequency]').value = 'Count';
 		document.querySelector('input[name=clearAll]').value = 'Clear';
+		document.title = 'Letter frequency';
 	}
 }
 
