@@ -380,6 +380,11 @@ function initPage() {
 			letterFrequency();
 	};
 	//intext.style.cssText = 'height: '+ parseInt(window.screen.height * 0.6) +'px;';
+	
+	if(!/ru|uk|be/.test(navigator.language)) {
+		document.querySelector('input[name=letterFrequency]').value = 'Count';
+		document.querySelector('input[name=clearAll]').value = 'Clear';
+	}
 }
 
 function letterFrequency() {
