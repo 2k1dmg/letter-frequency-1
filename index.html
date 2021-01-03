@@ -351,6 +351,26 @@ var menumenuList = [
 ];
 var filterList = [];
 
+function localize() {
+	if(/ru|ua|by/i.test(navigator.language))
+		return;
+	var locale = { 
+		eng: {
+			'letterFrequency': 'Count',
+			'clearAll': 'Clear',
+			'autolf': 'Counting on option change',
+			'title': 'Letter frequency'
+		}
+	}
+	var inputList = document.querySelectorAll('input');
+	for(var input of inputList) {
+		if(input.title)
+			input.title = locale.eng[input.name];
+		input.value = locale.eng[input.name];
+	}
+	document.title = locale.eng.title;
+}
+
 function initPage() {
 	menumenuList.forEach(function(item) {
 		if(item[0] == 'separator') {
@@ -381,12 +401,7 @@ function initPage() {
 	};
 	//intext.style.cssText = 'height: '+ parseInt(window.screen.height * 0.6) +'px;';
 	
-	if(!/ru|ua|by/i.test(navigator.language)) {
-		document.querySelector('input[name=letterFrequency]').value = 'Count';
-		document.querySelector('input[name=clearAll]').value = 'Clear';
-		document.title = 'Letter frequency';
-		document.querySelector('#autolf').title = 'Counting on option change';
-	}
+	localize();
 }
 
 function letterFrequency() {
