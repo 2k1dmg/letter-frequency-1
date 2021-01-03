@@ -385,6 +385,7 @@ function initPage() {
 		document.querySelector('input[name=letterFrequency]').value = 'Count';
 		document.querySelector('input[name=clearAll]').value = 'Clear';
 		document.title = 'Letter frequency';
+		document.querySelector('#autolf').title = 'Counting on option change';
 	}
 }
 
@@ -401,7 +402,7 @@ function clearAll() {
 <body onload="initPage()">
 <input type="button" name="clearAll" value="Очистить" onclick="clearAll();">
 <input type="button" name="letterFrequency" value="Подсчитать" onclick="letterFrequency();">
-<input type="checkbox" checked id="autolf" title="Посдчёт при изменении опции">
+<input type="checkbox" checked id="autolf" title="Подсчёт при изменении опции">
 <select id="menuList"></select>
 <div id="container">
 	<textarea id="intext" spellcheck="false"></textarea>
