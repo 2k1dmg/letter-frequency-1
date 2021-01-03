@@ -72,7 +72,7 @@
 // data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAgElEQVR42mP8//8/AymAEU3D9nRGr1lp2/7P9Lwz0Vq1gGHC7aP5KlTVQLKTSNQAdsYxOBfsNNwa0FSDgRU+PwA1dKsdhRsJ9j6mJbj9ALGQkAaIsUgAnwawYoSjCdmAiDEinYTmR1iQYQQTXAO2QMXmEWRPI+mBGAwLAlwaiAIA1lyV4QUWOoUAAAAASUVORK5CYII=
 
 // https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/String/charAt
-//let n_sp = 0;
+//var n_sp = 0;
 function getWholeCharAndI(str, i) {
   var code = str.charCodeAt(i);
 
@@ -115,8 +115,8 @@ function getWholeCharAndI(str, i) {
 // https://stackoverflow.com/questions/18619785/counting-frequency-of-characters-in-a-string-using-javascript
 function getFrequency(string) {
 	//n_sp = 0;
-	let freq = {};
-	for(let i = 0, character; i < string.length; i++) {
+	var freq = {};
+	for(var i = 0, character; i < string.length; i++) {
 		[character, i] = getWholeCharAndI(string, i);
 		if(freq[character]) {
 			freq[character]++;
@@ -145,7 +145,7 @@ function checkChar(str) {
 
 // https://habrahabr.ru/post/240349/
 function getHEXcode(i) {
-	let string = i.codePointAt(0).toString(16);
+	var string = i.codePointAt(0).toString(16);
 	while(string.length < 4)
 		string = '0' + string;
 	return string;
@@ -155,7 +155,7 @@ function getPercent(totalValue, value) {
 	return ((value / totalValue) * 100).toFixed(3);
 }
 
-let alphabet = {
+var alphabet = {
 	'pun': {
 		//https://en.wikipedia.org/wiki/Punctuation
 		// ’'[](){}⟨⟩:,،、‒–—―…!.‹›«»‐-?‘’“”''"";/⁄·&*@•^†‡°″¡¿#№÷×ºª%‰+−=‱¶′″‴§~_|‖¦©℗®℠™¤₳฿₵¢₡₢$₫₯₠€ƒ₣₲₴₭₺ℳ₥₦₧₱₰£៛₽₹₨₪৳₸₮₩¥⁂❧☞‽⸮◊※⁀ <>
@@ -200,7 +200,7 @@ let alphabet = {
 };
 
 function getFiltered(freqAll, filterAttr) {
-	let freqRes = {};
+	var freqRes = {};
 	function setChar(value, character) {
 		if(freqRes[character]) {
 			freqRes[character] += value;
@@ -209,12 +209,12 @@ function getFiltered(freqAll, filterAttr) {
 			freqRes[character] = value;
 		}
 	}
-	for(let i in freqAll) {
+	for(var i in freqAll) {
 		if(alphabet[filterAttr].exten.indexOf(i) != -1) {
 			setChar.apply(this, alphabet[filterAttr].fn(freqAll[i], i))
 			continue;
 		}
-		let character = i.toLowerCase();
+		var character = i.toLowerCase();
 		if(alphabet[filterAttr].main.indexOf(character) != -1) {
 			setChar(freqAll[i], character);
 		}
@@ -223,25 +223,25 @@ function getFiltered(freqAll, filterAttr) {
 }
 
 function processData(sourceText, filterAttr) {
-	let timeStart = Date.now();
+	var timeStart = Date.now();
 
-	let freqAll = getFrequency(sourceText);
-	let freqRes = freqAll;
+	var freqAll = getFrequency(sourceText);
+	var freqRes = freqAll;
 	if(filterList.indexOf(filterAttr) != -1) {
 		freqRes = getFiltered(freqAll, filterAttr);
 	}
-	let freqList = [];
-	let freqSum = 0;
-	for(let i in freqRes) {
+	var freqList = [];
+	var freqSum = 0;
+	for(var i in freqRes) {
 		freqSum += freqRes[i];
 		freqList.push({name: i, value: freqRes[i]});
 	}
 	freqList.sort(function(a, b) {
 		return b.value - a.value;
 	});
-	let outputList = [filterAttr, 'char\tcount\t%\tcode\thex'];
-	let outputListLen = outputList.length;
-	let missingLetters = alphabet[filterAttr] ? alphabet[filterAttr].main : '';
+	var outputList = [filterAttr, 'char\tcount\t%\tcode\thex'];
+	var outputListLen = outputList.length;
+	var missingLetters = alphabet[filterAttr] ? alphabet[filterAttr].main : '';
 	freqList.forEach(function(item) {
 		outputList.push(checkChar(item.name) +'\t'+ item.value +'\t'+ getPercent(freqSum, item.value) +'\t'+ item.name.codePointAt(0) +'\t'+ getHEXcode(item.name));
 		missingLetters = missingLetters.replace(item.name, '');
@@ -261,7 +261,7 @@ function processData(sourceText, filterAttr) {
 	  }
 	  return s;
 	}
-	let stats = {
+	var stats = {
 		dl: sourceText.length,
 		chs: Array.from(sourceText).length, //sourceText.normalize().length
 		chsns: Array.from(sourceText.replace(/\s+/g, '')).length, //sourceText.replace(/\s+/g, '').normalize().length
@@ -272,10 +272,10 @@ function processData(sourceText, filterAttr) {
 		ll: (sourceText.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '')).length,
 		bll: byteLength(sourceText.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), ''))
 	};
-	let byteLengthCharacter = (function() {
-		let total = {};
-		for(let i in freqAll) {
-			let len = byteLength(i);
+	var byteLengthCharacter = (function() {
+		var total = {};
+		for(var i in freqAll) {
+			var len = byteLength(i);
 			if(total[len]) {
 				total[len] += freqAll[i];
 			}
@@ -285,12 +285,12 @@ function processData(sourceText, filterAttr) {
 		}
 		return total;
 	})();
-	let byteLengthLetter = (function() {
-		let total = {};
-		for(let i in freqAll) {
+	var byteLengthLetter = (function() {
+		var total = {};
+		for(var i in freqAll) {
 			if(i.replace(/\s+/g, '').replace(/\d+/g, '').replace(new RegExp('['+ alphabet.pun.re +']+','g'), '') == '')
 				continue;
-			let len = byteLength(i);
+			var len = byteLength(i);
 			if(total[len]) {
 				total[len] += freqAll[i];
 			}
@@ -322,23 +322,23 @@ function processData(sourceText, filterAttr) {
 		stats.ll + '\t- letters length (JS)',
 		stats.bll + '\t- letters bytes',
 		'-');
-	for(let i in byteLengthCharacter) {
+	for(var i in byteLengthCharacter) {
 		outputList.push(byteLengthCharacter[i] + '\t- '+ i +' byte characters');
 	}
 	outputList.push('-');
-	for(let i in byteLengthLetter) {
+	for(var i in byteLengthLetter) {
 		outputList.push(byteLengthLetter[i] + '\t- '+ i +' byte letters');
 	}
-	let timeEnd = Date.now();
+	var timeEnd = Date.now();
 	outputList.push('-');
 	outputList.push('time: '+ ((timeEnd - timeStart)/1000) + ' seconds');
-	let output = outputList.join('\n');
+	var output = outputList.join('\n');
 	return output;
 }
 
 // -----------------------------------------------------------------------------
 
-let menumenuList = [
+var menumenuList = [
 	['All', 'all'],
 	['Numbers', 'num'],
 	['Punctuation', 'pun'],
@@ -349,7 +349,7 @@ let menumenuList = [
 	['Cyrillic(Russian)', 'cyr_rus'],
 	['Cyrillic(Tatar)', 'cyr_tat']
 ];
-let filterList = [];
+var filterList = [];
 
 function initPage() {
 	menumenuList.forEach(function(item) {
