@@ -366,7 +366,8 @@ function localize() {
 	for(var input of inputList) {
 		if(input.title)
 			input.title = locale.eng[input.name];
-		input.value = locale.eng[input.name];
+		if(input.value)
+			input.value = locale.eng[input.name];
 	}
 	document.title = locale.eng.title;
 }
